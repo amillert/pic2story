@@ -45,5 +45,13 @@ argument_parser.add_argument(
     help="Provide file's path with networks pretrained weights (transfer learning)",
     required=True
 )
+argument_parser.add_argument(
+    "-c",
+    "--confidence",
+    action="store",
+    type=float,
+    help="Provide confidence to filter out irrelevant objects' predictions from the YOLO object detection",
+    required=True
+)
 
 args = argument_parser.parse_args()
