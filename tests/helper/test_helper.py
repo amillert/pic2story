@@ -6,7 +6,7 @@ from src.argparser import args
 from src.vision.detector import Detector
 
 
-class TestDetector(TestCase):
+class TestHelper(TestCase):
     def setUp(self):
         self.detector = Detector(args)
 
