@@ -3,14 +3,14 @@ import os
 import cv2
 import numpy as np
 
-from ..helper.functional import Functional
-from ..helper.paths_generator import PathsGenerator
+from ..helper import functional as fct
+from ..helper import paths_generator as pgen
 
 
-class Detector(PathsGenerator, Functional):
+class Detector:
     def __init__(self, args):
         import src
-        def_pics_paths = os.listdir(os.path.join(self.parent_path(src.SRC_DIR), "data/pics"))
+        def_pics_paths = os.listdir(os.path.join(pgen.parent_path(src.SRC_DIR), "data/pics"))
 
         self.confidence = args.confidence
         self.paths_img = args.paths_img if args.paths_img else def_pics_paths
@@ -19,7 +19,7 @@ class Detector(PathsGenerator, Functional):
 
     def detect(self):
         return ((label, confidence)
-                for img_path in self.flatten(self.generate_absolute_paths(self.paths_img))
+                for img_path in fct.flatten(pgen.generate_absolute_paths(self.paths_img))
                 for (label, confidence) in self.predict_label(img_path))
 
     def predict_label(self, img):
