@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from src.vision.detector import Detector
 from src.argparser import args
+from src.vision.detector import Detector
 
 
 class TestDetector(TestCase):

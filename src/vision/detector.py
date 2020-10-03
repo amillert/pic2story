@@ -1,9 +1,10 @@
 import os
+
 import cv2
 import numpy as np
 
-from ..helper.paths_generator import PathsGenerator
 from ..helper.functional import Functional
+from ..helper.paths_generator import PathsGenerator
 
 
 class Detector(PathsGenerator, Functional):
