@@ -10,4 +10,3 @@ if __name__ == '__main__':
     #     pass
     detected = Detector(args).detect()
     corpus = Reader(args).read()
-    print("main", corpus)
