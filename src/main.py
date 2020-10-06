@@ -17,4 +17,3 @@ if __name__ == '__main__':
 
     # TODO: ensure compatibility with the learn method in Runner
     runner = Runner(args).learn()
-
