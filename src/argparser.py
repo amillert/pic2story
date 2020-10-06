@@ -53,5 +53,22 @@ argument_parser.add_argument(
     help="Provide confidence to filter out irrelevant objects' predictions from the YOLO object detection",
     required=True
 )
+argument_parser.add_argument(
+    "-b",
+    "--paths_books",
+    action="store",
+    type=str,
+    help="Provide children books paths to build corpus",
+    required=True,
+    nargs="+"
+)
+argument_parser.add_argument(
+    "--ngrams",
+    action="store",
+    type=int,
+    help="Provide the amount of context words (per side -> e.g. if you want to consider 4 neighbour-words, use - 2)"
+         " around the target word to create ngrams",
+    required=True
+)
 
 args = argument_parser.parse_args()
