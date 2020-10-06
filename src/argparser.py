@@ -18,7 +18,7 @@ argument_parser.add_argument(
 )
 argument_parser.add_argument(
     "--train",
-    action="store",
+    action="store_true",
     help="If provided, the training pipeline process will be evaluated"
 )
 argument_parser.add_argument(
@@ -69,6 +69,11 @@ argument_parser.add_argument(
     help="Provide the amount of context words (per side -> e.g. if you want to consider 4 neighbour-words, use - 2)"
          " around the target word to create ngrams",
     required=True
+)
+argument_parser.add_argument(
+    "--load_data",
+    action="store_true",
+    help="If provided, corpus module must have been already run and its results saved"
 )
 
 args = argument_parser.parse_args()
