@@ -75,5 +75,12 @@ argument_parser.add_argument(
     action="store_true",
     help="If provided, corpus module must have been already run and its results saved"
 )
+argument_parser.add_argument(
+    "--logging",
+    action="store_true",
+    help="If provided, logging mode will be turned on; adds some more insights to the learning process, "
+         "but may result in slower time of learning due to irrelevant side effects"
+)
+
 
 args = argument_parser.parse_args()
