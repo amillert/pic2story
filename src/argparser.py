@@ -81,6 +81,34 @@ argument_parser.add_argument(
     help="If provided, logging mode will be turned on; adds some more insights to the learning process, "
          "but may result in slower time of learning due to irrelevant side effects"
 )
-
+argument_parser.add_argument(
+    "--batch_size",
+    action="store",
+    type=int,
+    help="Provide the single mini-batch size"
+    required=True
+)
+argument_parser.add_argument(
+    "--epochs",
+    action="store",
+    type=int,
+    help="Provide the amount of training iterations",
+    required=True
+)
+argument_parser.add_argument(
+    "--eta",
+    action="store",
+    type=float,
+    help="Provide the learning rate for the optimizer to adjust weights after learning",
+    required=True
+)
+argument_parser.add_argument(
+    "-g",
+    "--gradient_normalization",
+    action="store",
+    type=int,
+    help="Provide the gradient normalization factor",
+    required=True
+)
 
 args = argument_parser.parse_args()
