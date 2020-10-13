@@ -6,6 +6,7 @@ from typing import List, Tuple, Iterable
 from ..corpus.corpus_data import CorpusData
 from ..helper import functional as fct
 from ..helper import paths_generator as pgen
+from ..helper import utils as utl
 
 
 class Reader:
@@ -50,9 +51,7 @@ class Reader:
 
     def read(self):
         if self.read_corpus:
-            with open('corpus.pkl', 'rb') as i:
-                corpus_data = pickle.load(i)
-            return corpus_data
+            return utl.load_obj(self.read_corpus)
 
         ngrams = []
 
@@ -81,7 +80,6 @@ class Reader:
         corpus_data = CorpusData(ngrams, vocabulary, word2idx, idx2word)
 
         if self.save_corpus:
-            with open('corpus.pkl', 'wb') as o:
-                pickle.dump(corpus_data, o, pickle.HIGHEST_PROTOCOL)
+            utl.save_obj(corpus_data, self.save_corpus)
 
         return corpus_data
