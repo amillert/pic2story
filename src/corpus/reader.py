@@ -1,6 +1,5 @@
 from collections import Counter
 import os
-import pickle
 from typing import List, Tuple, Iterable
 
 from ..corpus.corpus_data import CorpusData
