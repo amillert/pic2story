@@ -70,5 +70,17 @@ argument_parser.add_argument(
          " around the target word to create ngrams",
     required=True
 )
+argument_parser.add_argument(
+    "--read_corpus",
+    action="store",
+    type=str,
+    help="If provided, unpickles the corpus object from the file; if doesn't work, standard procedure will kick in"
+)
+argument_parser.add_argument(
+    "--save_corpus",
+    action="store",
+    type=str,
+    help="If provided, pickles the corpus object to the file"
+)
 
 args = argument_parser.parse_args()
