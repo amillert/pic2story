@@ -9,4 +9,4 @@ if __name__ == '__main__':
     # if args.train:
     #     pass
     detected = Detector(args).detect()
-    corpus = Reader(args).read()
+    corpus_data = Reader(args).read()

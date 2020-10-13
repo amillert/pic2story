@@ -1,6 +1,9 @@
+from collections import Counter
 import os
+import pickle
 from typing import List, Tuple, Iterable
 
+from ..corpus.corpus_data import CorpusData
 from ..helper import functional as fct
 from ..helper import paths_generator as pgen
 
@@ -12,6 +15,9 @@ class Reader:
 
         self.paths_books = args.paths_books if args.paths_books else def_books_paths
         self.ctx = args.ngrams
+        # TODO: update argparser
+        self.read_corpus = args.read_corpus
+        self.save_corpus = args.save_corpus
 
     @staticmethod
     def line_rule(line: str) -> bool:
@@ -43,6 +49,11 @@ class Reader:
             yield target, left_ctx + right_ctx
 
     def read(self):
+        if self.read_corpus:
+            with open('corpus.pkl', 'rb') as i:
+                corpus_data = pickle.load(i)
+            return corpus_data
+
         ngrams = []
 
         # TODO: check whether distinguishing one book from the other matters
@@ -55,10 +66,22 @@ class Reader:
                 #       think about punctuation in general
 
                 lines = [line.strip().replace("\n", "") for line in w.read().split("\n\n") if self.line_rule(line)]
-                naively_tokenized = [sentence.split() for sentence in ' '.join(lines).split(".")]
+                naive_tokens = [sentence.split() for sentence in ' '.join(lines).split(".")]
 
-                ngrams.append([self.generate_ngrams(sentence) for sentence in naively_tokenized if len(sentence)])
+                word2freq = Counter(fct.flatten(naive_tokens))
+                vocabulary = list(word2freq.keys())
+                word2idx = {"<PAD>": 0}
+                word2idx.update({token: i + 1 for i, token in enumerate(vocabulary)})
+                idx2word = {v: k for k, v in word2idx.items()}
+
+                ngrams.append([self.generate_ngrams(sentence) for sentence in naive_tokens if len(sentence)])
 
         assert len(ngrams) == len(self.paths_books)
 
-        return ngrams
+        corpus_data = CorpusData(ngrams, vocabulary, word2idx, idx2word)
+
+        if self.save_corpus:
+            with open('corpus.pkl', 'wb') as o:
+                pickle.dump(corpus_data, o, pickle.HIGHEST_PROTOCOL)
+
+        return corpus_data
