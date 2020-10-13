@@ -1,6 +1,6 @@
 from collections import Counter
 import os
-from typing import List, Tuple, Iterable
+from typing import List, Tuple, Iterable, Dict, Any, Union
 
 from ..corpus.corpus_data import CorpusData
 from ..helper import functional as fct
@@ -47,10 +47,8 @@ class Reader:
             left_ctx, right_ctx = self.extract_context(i, sentence)
             yield target, left_ctx + right_ctx
 
-    def read(self):
-        if self.read_corpus:
-            return utl.load_obj(self.read_corpus)
-
+    def preprocess(self) -> Tuple[List[List[Iterable[Tuple[str, List[str]]]]],
+                                  List[Any], Dict[Union[str, Any], Union[int, Any]], dict]:
         ngrams = []
 
         # TODO: check whether distinguishing one book from the other matters
@@ -58,7 +56,6 @@ class Reader:
 
         for book in fct.flatten(pgen.generate_absolute_paths(self.paths_books)):
             with open(book) as w:
-
                 # TODO: split on end of sentence punctuation marks (dot is not always end of sentence);
                 #       think about punctuation in general
 
@@ -73,11 +70,22 @@ class Reader:
 
                 ngrams.append([self.generate_ngrams(sentence) for sentence in naive_tokens if len(sentence)])
 
-        assert len(ngrams) == len(self.paths_books)
+            assert len(ngrams) == len(self.paths_books)
 
-        corpus_data = CorpusData(ngrams, vocabulary, word2idx, idx2word)
+            return ngrams, vocabulary, word2idx, idx2word
 
-        if self.save_corpus:
-            utl.save_obj(corpus_data, self.save_corpus)
+    def read(self) -> CorpusData:
+        corpus_data = None
+        try:
+            if self.read_corpus:
+                corpus_data = utl.load_obj(self.read_corpus)
+            ln = len(corpus_data.word2idx)
+            assert (ln > 100, f"Corpus is either too small (size: {ln}), or it has not been created yet; "
+                              f"either way - standard procedure will continue")
+        except:
+            corpus_data = CorpusData(*self.preprocess())
 
-        return corpus_data
+            if self.save_corpus:
+                utl.save_obj(corpus_data, self.save_corpus)
+        finally:
+            return corpus_data
