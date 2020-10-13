@@ -15,7 +15,6 @@ class Reader:
 
         self.paths_books = args.paths_books if args.paths_books else def_books_paths
         self.ctx = args.ngrams
-        # TODO: update argparser
         self.read_corpus = args.read_corpus
         self.save_corpus = args.save_corpus
 
