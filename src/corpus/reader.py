@@ -80,7 +80,7 @@ class Reader:
             if self.read_corpus:
                 corpus_data = utl.load_obj(self.read_corpus)
             ln = len(corpus_data.word2idx)
-            assert (ln > 100, f"Corpus is either too small (size: {ln}), or it has not been created yet; "
+            assert ln > 100, (f"Corpus is either too small (size: {ln}), or it has not been created yet; "
                               f"either way - standard procedure will continue")
         except:
             corpus_data = CorpusData(*self.preprocess())
