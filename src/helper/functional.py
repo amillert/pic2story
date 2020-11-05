@@ -1,5 +1,5 @@
 def flatten(xs):
-    return (xi for x in xs for xi in x)
+    return [xi for x in xs for xi in x]
 
 
 def unique(xs):

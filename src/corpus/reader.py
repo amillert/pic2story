@@ -53,6 +53,10 @@ class Reader:
     def fil(word):
         return ''.join([x for x in word if x.isalpha() or x.isnumeric() or x in "!?,.-:;\"'"])
 
+    @staticmethod
+    def idexify(ngrams, word2idx):
+        return [(word2idx[t], [word2idx[ci] for ci in c]) for t, c in ngrams]
+
     def preprocess(self):
         ngrams = []
 
@@ -79,11 +83,12 @@ class Reader:
                 word2idx.update({token: i + 1 for i, token in enumerate(vocabulary)})
                 idx2word = {v: k for k, v in word2idx.items()}
 
+                # TODO: consider removing too seldom target words and their context
                 ngrams.append([self.generate_ngrams(sentence) for sentence in naive_tokens if len(sentence)])
 
             assert len(ngrams) == len(self.paths_books)
 
-            return ngrams, vocabulary, word2idx, idx2word
+            return self.idexify(fct.flatten(fct.flatten(ngrams)), word2idx), vocabulary, word2idx, idx2word
 
     def read(self):
         if self.read_corpus and len(os.listdir('/'.join(self.read_corpus.split("/")[:-1]) + "/")):

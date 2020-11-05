@@ -12,27 +12,27 @@ from tqdm import tqdm
 
 class Runner:
     def __init__(self, args):
-
         # TODO: timer and tqdm as a argument in argparser
         self.args = args
-        self.load_data = args.load_data
+        # self.DATASET = CustomDataset(self.args, corpus)
         self.track = True
         self.load_x = False
         self.load_y = False
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        pass
 
     def learn(self):
-        DATASET = CustomDataset(self.args, self.load_data)
+        DATASET = CustomDataset(self.args)
 
         DATA_SIZE, FEATURE_SIZE = DATASET.shape
         BATCH_SIZE = 500
 
-        assert (not DATA_SIZE % BATCH_SIZE,
-                f"BATCH_SIZE must be a divisor of the DATASIZE, else the model will not have a proper layer size set. "
-                f"Given BATCH_SIZE: {BATCH_SIZE} and DATA_SIZE: {DATA_SIZE}. For Your reference, use one of these: "
-                f"{[x for x in range(DATA_SIZE) if 1 < x <= 1024 and not DATA_SIZE % x]}")
+        # print(DATA_SIZE, FEATURE_SIZE)
+        # exit(12)
+        # assert not DATA_SIZE % BATCH_SIZE
+        #     f"BATCH_SIZE must be a divisor of the DATASIZE, else the model will not have a proper layer size set. "
+        #         f"Given BATCH_SIZE: {BATCH_SIZE} and DATA_SIZE: {DATA_SIZE}. For Your reference, use one of these: "
+        #         f"{[x for x in range(DATA_SIZE) if 1 < x <= 1024 and not DATA_SIZE % x]}")
 
         # DIMENSIONS (H_DIMS, F_DIMS, etc.)
 
@@ -41,7 +41,7 @@ class Runner:
         print('Creating batches done')
 
         # TODO: load from the argparser
-        MODEL = RNNNet(BATCH_SIZE, 0, 0)
+        MODEL = RNNNet(BATCH_SIZE, 0, 0, 10)
         EPOCHS = 10
         ETA = 5
         # MOMENTUM = 0
