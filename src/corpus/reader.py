@@ -42,9 +42,16 @@ class Reader:
 
     # TODO: (just as an example); check what will be needed for the generation
     def generate_ngrams(self, sentence):
+        res = []
         for i, target in enumerate(sentence):
             left_ctx, right_ctx = self.extract_context(i, sentence)
-            yield target, left_ctx + right_ctx
+            res.append((target, left_ctx + right_ctx))
+
+        return res
+
+    @staticmethod
+    def fil(word):
+        return ''.join([x for x in word if x.isalpha() or x.isnumeric() or x in "!?,.-:;\"'"])
 
     def preprocess(self):
         ngrams = []
@@ -57,8 +64,14 @@ class Reader:
                 # TODO: split on end of sentence punctuation marks (dot is not always end of sentence);
                 #       think about punctuation in general
 
-                lines = [line.strip().replace("\n", "") for line in w.read().split("\n\n") if self.line_rule(line)]
-                naive_tokens = [sentence.split() for sentence in ' '.join(lines).split(".")]
+                lines = [line.strip()
+                             .replace("\n", "")
+                             .replace("'t", " not")
+                             .replace("'s", " is")
+                             .replace("'d", "would")
+                             .replace("'ve", "have")
+                         for line in w.read().split("\n\n") if self.line_rule(line)]
+                naive_tokens = [[self.fil(word) for word in sentence.split()] for sentence in ' '.join(lines).split(".")]
 
                 word2freq = Counter(fct.flatten(naive_tokens))
                 vocabulary = list(word2freq.keys())
@@ -73,17 +86,16 @@ class Reader:
             return ngrams, vocabulary, word2idx, idx2word
 
     def read(self):
-        corpus_data = None
-        try:
-            if self.read_corpus:
-                corpus_data = utl.load_obj(self.read_corpus)
+        if self.read_corpus and len(os.listdir('/'.join(self.read_corpus.split("/")[:-1]) + "/")):
+            corpus_data = utl.load_obj(self.read_corpus)
+
             ln = len(corpus_data.word2idx)
             assert ln > 100, (f"Corpus is either too small (size: {ln}), or it has not been created yet; "
                               f"either way - standard procedure will continue")
-        except:
+        else:
             corpus_data = CorpusData(*self.preprocess())
 
             if self.save_corpus:
                 utl.save_obj(corpus_data, self.save_corpus)
-        finally:
-            return corpus_data
+
+        return corpus_data
