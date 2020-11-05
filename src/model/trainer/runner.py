@@ -29,11 +29,10 @@ class Runner:
         DATA_SIZE, FEATURE_SIZE = DATASET.shape
         BATCH_SIZE = 500
 
-        assert not DATA_SIZE % BATCH_SIZE, f"BATCH_SIZE must be a divisor of the DATASIZE, " \
-                                           f"else the model will not have a proper layer size set. Given BATCH_SIZE: {BATCH_SIZE} " \
-                                           f"and DATA_SIZE: {DATA_SIZE}. " \
-                                           f"For Your reference, use one of these: " \
-                                           f"{[x for x in range(DATA_SIZE) if 1 < x <= 1024 and not DATA_SIZE % x]}"
+        assert (not DATA_SIZE % BATCH_SIZE,
+                f"BATCH_SIZE must be a divisor of the DATASIZE, else the model will not have a proper layer size set. "
+                f"Given BATCH_SIZE: {BATCH_SIZE} and DATA_SIZE: {DATA_SIZE}. For Your reference, use one of these: "
+                f"{[x for x in range(DATA_SIZE) if 1 < x <= 1024 and not DATA_SIZE % x]}")
 
         # DIMENSIONS (H_DIMS, F_DIMS, etc.)
 

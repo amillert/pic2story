@@ -97,7 +97,7 @@ argument_parser.add_argument(
     "--batch_size",
     action="store",
     type=int,
-    help="Provide the single mini-batch size"
+    help="Provide the single mini-batch size",
     required=True
 )
 argument_parser.add_argument(

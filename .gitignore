@@ -1,3 +1,4 @@
 .idea
 __pycache__
 utils/yolov3.weights
+data/
