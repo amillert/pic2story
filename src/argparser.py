@@ -18,7 +18,7 @@ argument_parser.add_argument(
 )
 argument_parser.add_argument(
     "--train",
-    action="store",
+    action="store_true",
     help="If provided, the training pipeline process will be evaluated"
 )
 argument_parser.add_argument(
@@ -81,6 +81,46 @@ argument_parser.add_argument(
     action="store",
     type=str,
     help="If provided, pickles the corpus object to the file"
+)
+argument_parser.add_argument(
+    "--load_data",
+    action="store_true",
+    help="If provided, corpus module must have been already run and its results saved"
+)
+argument_parser.add_argument(
+    "--logging",
+    action="store_true",
+    help="If provided, logging mode will be turned on; adds some more insights to the learning process, "
+         "but may result in slower time of learning due to irrelevant side effects"
+)
+argument_parser.add_argument(
+    "--batch_size",
+    action="store",
+    type=int,
+    help="Provide the single mini-batch size"
+    required=True
+)
+argument_parser.add_argument(
+    "--epochs",
+    action="store",
+    type=int,
+    help="Provide the amount of training iterations",
+    required=True
+)
+argument_parser.add_argument(
+    "--eta",
+    action="store",
+    type=float,
+    help="Provide the learning rate for the optimizer to adjust weights after learning",
+    required=True
+)
+argument_parser.add_argument(
+    "-g",
+    "--gradient_normalization",
+    action="store",
+    type=int,
+    help="Provide the gradient normalization factor",
+    required=True
 )
 
 args = argument_parser.parse_args()
