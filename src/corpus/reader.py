@@ -53,10 +53,11 @@ class Reader:
     def generate_windowed_sentences(self, sentences, word2idx, window):
         res = []
         for sen in sentences:
-            tok = [word2idx[x] for s in sen for x in s.split()]
+            # tok = [word2idx[x] for s in sen for x in s.split()]
+            tok = [word2idx[s] for s in sen.split()]
             if len(tok) < window:
                 ile = window - len(tok)
-                res.append(tok + ["<PAD>"] * ile)
+                res.append(tok + [word2idx["<PAD>"]] * ile)
             elif len(tok) > window:
                 ile = len(tok) - window
                 for i in range(0, ile):
@@ -75,7 +76,7 @@ class Reader:
         return [(word2idx[t], [word2idx[ci] for ci in c]) for t, c in ngrams]
 
     def preprocess(self):
-        ngrams = []
+        # ngrams = []
 
         # TODO: check whether distinguishing one book from the other matters
         #       in terms of text generation (same with chapters, etc.)
@@ -92,9 +93,12 @@ class Reader:
                              .replace("'d", "would")
                              .replace("'ve", "have")
                          for line in w.read().split("\n\n") if self.line_rule(line)]
-                naive_tokens = [' '.join([self.fil(word) for word in sentence.split()]) for sentence in ' '.join(lines).split(".")]
+                tokenized_sentences = [' '.join([self.fil(word.lower()) for word in sentence.split()]) for sentence in ' '.join(lines).split(".")]
+                tokenized_sentences = [sen for sen in tokenized_sentences if sen]
 
-                word2freq = Counter(fct.flatten(naive_tokens))
+                naive_tokens = [token for sen in tokenized_sentences for token in sen.split()]
+
+                word2freq = Counter(naive_tokens)
                 vocabulary = list(word2freq.keys())
                 word2idx = {"<PAD>": 0}
                 word2idx.update({token: i + 1 for i, token in enumerate(vocabulary)})
@@ -102,7 +106,7 @@ class Reader:
 
                 window = 4
                 # decided on windowed sentences
-                windowed_sentences = self.generate_windowed_sentences(naive_tokens, word2idx, window)
+                windowed_sentences = self.generate_windowed_sentences(tokenized_sentences, word2idx, window)
 
                 # TODO: consider removing too seldom target words and their context
                 # ngrams.append([self.generate_ngrams(sentence) for sentence in naive_tokens if len(sentence)])

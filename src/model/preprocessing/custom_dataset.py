@@ -18,24 +18,31 @@ class CustomDataset(Dataset):
             print("loading from files done")
             self.shape = self.x_data.shape
             self.len = self.shape[0]
-            self.target_column = ""
             # doesn't matter for now
         else:
             # TODO: make this part work first
             corpus = Reader(args).read()
-            data = corpus.ngrams
+            data = corpus.windowed
 
-            targets = np.array([target for target, _ in data])
-            contexts = np.array([context for _, context in data])
+            x_data = np.array(data[1:], dtype=float)
+            y_data = np.array(data[:-1], dtype=float)
 
+            # newer:
+            # targets = np.array([target for target, _ in data])
+            # contexts = np.array([context for _, context in data])
+
+            # older:
             # data = pd.read_csv(os.path.join("", ""), header=0, sep=",", nrows=500000)
             # data = self._preprocess_data(data)
             # x_data = data.drop([self.target_column], axis=1).values
             # y_data = data["is_attributed"].values
             # data = corpus.ngrams
 
-            self.x_data = torch.tensor(targets, dtype=torch.float32)
-            self.y_data = torch.tensor(contexts, dtype=torch.float32)
+            # self.x_data = torch.tensor(targets, dtype=torch.float32)
+            # self.y_data = torch.tensor(contexts, dtype=torch.float32)
+
+            self.x_data = torch.tensor(x_data, dtype=torch.float32)
+            self.y_data = torch.tensor(y_data, dtype=torch.float32)
             self.shape = self.y_data.shape
 
             self.len = len(data)
