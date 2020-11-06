@@ -49,7 +49,7 @@ class Reader:
 
         return res
 
-    # TODO: (just as an example); check what will be needed for the generation
+    # TODO: definitely needs a refactor and optimization work
     def generate_windowed_sentences(self, sentences, word2idx, window):
         res = []
         for sen in sentences:
