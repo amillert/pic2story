@@ -53,17 +53,14 @@ class Reader:
     def generate_windowed_sentences(self, sentences, word2idx, window):
         res = []
         for sen in sentences:
-            # tok = [word2idx[x] for s in sen for x in s.split()]
-            tok = [word2idx[s] for s in sen.split()]
-            if len(tok) < window:
-                ile = window - len(tok)
-                res.append(tok + [word2idx["<PAD>"]] * ile)
-            elif len(tok) > window:
-                ile = len(tok) - window
-                for i in range(0, ile):
-                    res.append(tok[i:i + window])
+            tokens = [word2idx[s] for s in sen.split()]
+            abs_diff = abs(window - len(tokens))
+
+            if len(tokens) < window:
+                res.append(tokens + [word2idx["<PAD>"]] * abs_diff)
             else:
-                res.append(tok)
+                for i in range(0, abs_diff + 1):
+                    res.append(tokens[i:i + window])
 
         return res
 
@@ -71,13 +68,7 @@ class Reader:
     def fil(word):
         return ''.join([x for x in word if x.isalpha() or x.isnumeric() or x in "!?,.-:;\"'"])
 
-    @staticmethod
-    def idexify(ngrams, word2idx):
-        return [(word2idx[t], [word2idx[ci] for ci in c]) for t, c in ngrams]
-
     def preprocess(self):
-        # ngrams = []
-
         # TODO: check whether distinguishing one book from the other matters
         #       in terms of text generation (same with chapters, etc.)
 
@@ -108,12 +99,6 @@ class Reader:
                 # decided on windowed sentences
                 windowed_sentences = self.generate_windowed_sentences(tokenized_sentences, word2idx, window)
 
-                # TODO: consider removing too seldom target words and their context
-                # ngrams.append([self.generate_ngrams(sentence) for sentence in naive_tokens if len(sentence)])
-
-            # assert len(ngrams) == len(self.paths_books)
-
-            # return self.idexify(fct.flatten(fct.flatten(ngrams)), word2idx), vocabulary, word2idx, idx2word
             return windowed_sentences, vocabulary, word2idx, idx2word
 
     def read(self):
