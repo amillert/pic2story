@@ -49,6 +49,23 @@ class Reader:
 
         return res
 
+    # TODO: (just as an example); check what will be needed for the generation
+    def generate_windowed_sentences(self, sentences, word2idx, window):
+        res = []
+        for sen in sentences:
+            tok = [word2idx[x] for s in sen for x in s.split()]
+            if len(tok) < window:
+                ile = window - len(tok)
+                res.append(tok + ["<PAD>"] * ile)
+            elif len(tok) > window:
+                ile = len(tok) - window
+                for i in range(0, ile):
+                    res.append(tok[i:i + window])
+            else:
+                res.append(tok)
+
+        return res
+
     @staticmethod
     def fil(word):
         return ''.join([x for x in word if x.isalpha() or x.isnumeric() or x in "!?,.-:;\"'"])
@@ -75,7 +92,7 @@ class Reader:
                              .replace("'d", "would")
                              .replace("'ve", "have")
                          for line in w.read().split("\n\n") if self.line_rule(line)]
-                naive_tokens = [[self.fil(word) for word in sentence.split()] for sentence in ' '.join(lines).split(".")]
+                naive_tokens = [' '.join([self.fil(word) for word in sentence.split()]) for sentence in ' '.join(lines).split(".")]
 
                 word2freq = Counter(fct.flatten(naive_tokens))
                 vocabulary = list(word2freq.keys())
@@ -83,12 +100,17 @@ class Reader:
                 word2idx.update({token: i + 1 for i, token in enumerate(vocabulary)})
                 idx2word = {v: k for k, v in word2idx.items()}
 
+                window = 4
+                # decided on windowed sentences
+                windowed_sentences = self.generate_windowed_sentences(naive_tokens, word2idx, window)
+
                 # TODO: consider removing too seldom target words and their context
-                ngrams.append([self.generate_ngrams(sentence) for sentence in naive_tokens if len(sentence)])
+                # ngrams.append([self.generate_ngrams(sentence) for sentence in naive_tokens if len(sentence)])
 
-            assert len(ngrams) == len(self.paths_books)
+            # assert len(ngrams) == len(self.paths_books)
 
-            return self.idexify(fct.flatten(fct.flatten(ngrams)), word2idx), vocabulary, word2idx, idx2word
+            # return self.idexify(fct.flatten(fct.flatten(ngrams)), word2idx), vocabulary, word2idx, idx2word
+            return windowed_sentences, vocabulary, word2idx, idx2word
 
     def read(self):
         if self.read_corpus and len(os.listdir('/'.join(self.read_corpus.split("/")[:-1]) + "/")):
