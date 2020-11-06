@@ -22,32 +22,19 @@ class CustomDataset(Dataset):
         else:
             # TODO: make this part work first
             corpus = Reader(args).read()
+            self.corpus = corpus
             data = corpus.windowed
 
             x_data = np.array(data[1:], dtype=float)
             y_data = np.array(data[:-1], dtype=float)
 
-            # newer:
-            # targets = np.array([target for target, _ in data])
-            # contexts = np.array([context for _, context in data])
-
-            # older:
-            # data = pd.read_csv(os.path.join("", ""), header=0, sep=",", nrows=500000)
-            # data = self._preprocess_data(data)
-            # x_data = data.drop([self.target_column], axis=1).values
-            # y_data = data["is_attributed"].values
-            # data = corpus.ngrams
-
-            # self.x_data = torch.tensor(targets, dtype=torch.float32)
-            # self.y_data = torch.tensor(contexts, dtype=torch.float32)
-
-            self.x_data = torch.tensor(x_data, dtype=torch.float32)
-            self.y_data = torch.tensor(y_data, dtype=torch.float32)
+            self.x_data = torch.tensor(x_data, dtype=torch.long)
+            self.y_data = torch.tensor(y_data, dtype=torch.long)
             self.shape = self.y_data.shape
 
-            self.len = len(data)
+            self.len = len(x_data)
 
-            assert self.len == len(self.x_data) == len(self.y_data), \
+            assert len(self.x_data) == len(self.y_data), \
                 f"length mismatch, whole dataset's length is {self.len}, " \
                 f"whereas x_data's length is {len(self.x_data)} and y_data's - {len(self.y_data)}."
 

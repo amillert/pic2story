@@ -99,7 +99,7 @@ class Reader:
                 naive_tokens = [token for sen in tokenized_sentences for token in sen.split()]
 
                 word2freq = Counter(naive_tokens)
-                vocabulary = list(word2freq.keys())
+                vocabulary = ["<PAD>"] + list(word2freq.keys())
                 word2idx = {"<PAD>": 0}
                 word2idx.update({token: i + 1 for i, token in enumerate(vocabulary)})
                 idx2word = {v: k for k, v in word2idx.items()}
