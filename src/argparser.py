@@ -133,5 +133,26 @@ argument_parser.add_argument(
     type=str,
     help="If provided, embedding layer in the model will be loaded with the pretrained weights"
 )
+argument_parser.add_argument(
+    "--hidden",
+    action="store",
+    type=int,
+    help="hidden size",
+    required=True
+)
+argument_parser.add_argument(
+    "--layers",
+    action="store",
+    type=int,
+    help="layers",
+    required=True
+)
+argument_parser.add_argument(
+    "--drop_prob",
+    action="store",
+    type=float,
+    help="layers",
+    required=True
+)
 
 args = argument_parser.parse_args()
