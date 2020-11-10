@@ -20,8 +20,8 @@ class Detector:
     def detect(self):
         # allows duplicates, in case detected in different pictures
         # TODO: think whether that's desired
-        return (label for img_path in fct.flatten(pgen.generate_absolute_paths(self.paths_img))
-                for label in set(self.predict_label(img_path)))
+        return [label for img_path in fct.flatten(pgen.generate_absolute_paths(self.paths_img))
+                for label in set(self.predict_label(img_path))]
 
     def predict_label(self, img):
         img = cv2.imread(img)
