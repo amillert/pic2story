@@ -122,5 +122,16 @@ argument_parser.add_argument(
     help="Provide the gradient normalization factor",
     required=True
 )
+argument_parser.add_argument(
+    "--save_weights",
+    action="store_true",
+    help="If provided, weights will be saved for future access"
+)
+argument_parser.add_argument(
+    "--load_pretrained",
+    action="store",
+    type=str,
+    help="If provided, embedding layer in the model will be loaded with the pretrained weights"
+)
 
 args = argument_parser.parse_args()
