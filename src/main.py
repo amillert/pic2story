@@ -12,4 +12,4 @@ if __name__ == '__main__':
 
     runner = Runner(args)
     MODEL = runner.learn()
-    print(runner.sample(MODEL, 50, ' '.join(detected)))
+    print(runner.generate(MODEL, 50, ' '.join(detected)))
