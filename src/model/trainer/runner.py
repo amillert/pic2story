@@ -1,5 +1,4 @@
 from ..preprocessing.custom_dataset import CustomDataset
-from ..rnn_net import RNNNet
 from ..word_LSTM import WordLSTM
 
 import random
@@ -10,120 +9,113 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 
 
 class Runner:
     def __init__(self, args):
-        # TODO: timer and tqdm as a argument in argparser
         self.args = args
-        # self.DATASET = CustomDataset(self.args, corpus)
-        self.track = True
+        # TODO: use these
         self.load_x = False
         self.load_y = False
 
+        # hyper-parameters
+        self.batch_size = args.batch_size
+        self.eta = args.eta
+        self.epochs = args.epochs
+        self.hidden = args.hidden
+        self.layers = args.layers
+        self.drop_prob = args.drop_prob
+
+        self.load_pretrained = self.args.load_pretrained
+        self.save_weights = self.args.save_weights
+
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    def predict(self, MODEL, token, h=None):
-        x = np.array([[self.corpus.idx2word[token]]])
-        inputs = torch.from_numpy(x)
+        self.dataset = CustomDataset(args)
+        self.corpus = self.dataset.corpus
 
+    def predict(self, model, token, h=None):
+        # TODO (1.2): remove this part after 1.1 is satisfied
+        # print(self.corpus.vocabulary)
+        x = np.array([[token]])
+
+        inputs = torch.from_numpy(x)
         inputs.to(self.device)
 
         h = tuple([each.data for each in h])
-
-        out, h = MODEL(inputs, h)
+        out, h = model(inputs, h)
         p = F.softmax(out, dim=1).data
 
         p = p.cpu()
-
         p = p.numpy()
         p = p.reshape(p.shape[1], )
 
         # get indices of top 3 values
         top_n_idx = p.argsort()[-3:][::-1]
-
         # randomly select one of the three indices
         sampled_token_index = top_n_idx[random.sample([0, 1, 2], 1)[0]]
 
-        # return the encoded value of the predicted char and the hidden state
-        return self.corpus.idx2word[sampled_token_index], h
+        return sampled_token_index, h
 
-    # function to generate text
-    def sample(self, MODEL, size, prime='it is'):
-
+    def generate(self, model, size, prime):
         # push to GPU
-        MODEL.to(self.device)
-
-        MODEL.eval()
+        model.to(self.device)
+        model.load_weights(self.load_pretrained)
+        model.eval()
 
         # batch size is 1
-        h = MODEL.init_hidden(1)
+        h = model.init_hidden(1)
 
-        tokens = prime.split()
+        # TODO (1.1): dataset is too small, so the detected labels are not even in the vocabulary yielding error
+        # tokens = [self.corpus.word2idx[token] for token in prime.split() if not token is "bicycle"]
+        tokens = [self.corpus.word2idx[token] for token in ["wife", "train", "vinegar", "houses"]]
 
         # predict next token
-        for t in prime.split():
-            token, h = self.predict(MODEL, t, h)
-
+        for t in tokens:
+            token, h = self.predict(model, t, h)
         tokens.append(token)
 
         # predict subsequent tokens
         for i in range(size - 1):
-            token, h = self.predict(MODEL, tokens[-1], h)
+            token, h = self.predict(model, tokens[-1], h)
             tokens.append(token)
 
-        return ' '.join(tokens)
+        return ' '.join([self.corpus.idx2word[token] for token in tokens])
 
     def learn(self):
-        DATASET = CustomDataset(self.args)
-        self.corpus = DATASET.corpus
+        data_size, feature_size = self.dataset.shape
 
-        DATA_SIZE, FEATURE_SIZE = DATASET.shape
-        BATCH_SIZE = 500
-
-        # print(DATA_SIZE, FEATURE_SIZE)
-        # exit(12)
-        # assert not DATA_SIZE % BATCH_SIZE
-        #     f"BATCH_SIZE must be a divisor of the DATASIZE, else the model will not have a proper layer size set. "
-        #         f"Given BATCH_SIZE: {BATCH_SIZE} and DATA_SIZE: {DATA_SIZE}. For Your reference, use one of these: "
-        #         f"{[x for x in range(DATA_SIZE) if 1 < x <= 1024 and not DATA_SIZE % x]}")
-
-        # DIMENSIONS (H_DIMS, F_DIMS, etc.)
-
-        print(f"Amount of data read: {DATA_SIZE}")
-        BATCHES = DataLoader(dataset=DATASET, batch_size=BATCH_SIZE, shuffle=True, num_workers=6)
+        print(f"Amount of data read: {data_size}")
+        batches = DataLoader(
+            dataset=self.dataset, drop_last=True, batch_size=self.batch_size, shuffle=True, num_workers=6
+        )
         print('Creating batches done')
 
         # TODO: load from the argparser
-        # MODEL = RNNNet(BATCH_SIZE, 0, 0, 10)
-        MODEL = WordLSTM(len(DATASET.corpus.vocabulary), 256, 20, 0.3)
-        EPOCHS = 10
-        ETA = 5
-        # MOMENTUM = 0
+        model = WordLSTM(len(self.corpus.vocabulary) + 1, feature_size, self.hidden, self.layers,  0.3)
 
-        CRITERION = nn.CrossEntropyLoss()
-        OPTIMIZER = torch.optim.Adam(MODEL.parameters(), lr=ETA)  # , momentum=MOMENTUM)
-        # OPTIMIZER = torch.optim.Adam(MODEL.parameters(), lr=ETA)
+        # if self.load_pretrained:
+        model.load_weights(self.load_pretrained)
+
+        criterion = nn.CrossEntropyLoss()
+        optimizer = torch.optim.Adam(model.parameters(), lr=self.eta)
 
         # TODO: what it's for?
         CLIP = 1
 
-        NUM_BATCHES = np.ceil(DATA_SIZE / BATCH_SIZE)
-        print(f"Upcoming batches: {NUM_BATCHES}")
+        NUM_BATCHES = np.ceil(data_size / self.batch_size)
 
-        for epoch in tqdm(range(EPOCHS)):
-            correctly_classified, total_classified = 0.0, 0.0
+        for epoch in range(self.epochs):
             tick = time.time()
             loss_total = 0.0
             batch_count = 0
 
-            state_h = MODEL.init_hidden(BATCH_SIZE)
+            state_h = model.init_hidden(self.batch_size)
 
-            for X, y in BATCHES:
+            for X, y in batches:
                 batch_count += 1
 
-                MODEL.train()
+                model.train()
 
                 # move to the GPU if possible
                 # TODO: ensure X and y are Tensors
@@ -131,42 +123,34 @@ class Runner:
 
                 h = tuple([each.data for each in state_h])
 
-                # OPTIMIZER.zero_grad()
-                MODEL.zero_grad()
+                model.zero_grad()
 
-                output, h = MODEL(inputs, h)
+                output, h = model(inputs, h)
 
-                loss = CRITERION(output, targets.view(-1))
+                loss = criterion(output, targets.view(-1))
 
-                # state_h = state_h.detach()
-                # state_c = state_h.detach()
-
-                print(f"Batch {batch_count} loss: {loss}, mean loss: {loss_total / batch_count}")
                 loss_total += loss.item()
 
-                # OPTIMIZER.zero_grad()
                 loss.backward()
 
                 # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
-                nn.utils.clip_grad_norm_(MODEL.parameters(), CLIP)
+                nn.utils.clip_grad_norm_(model.parameters(), CLIP)
 
-                OPTIMIZER.step()
+                optimizer.step()
 
-                if not batch_count % 10 and batch_count > 0:
+                if not batch_count % 100 and batch_count > 0:
                     print(f"Batch {batch_count} of epoch {epoch + 1}")
                     print('mean loss {0:.4f}'.format(loss_total / batch_count))
 
-            tock = time.time()
             print("~~~~~~~~~~~~~~~~~~")
-            print(f"Epoch: {epoch + 1} out of {EPOCHS}")
-            print(f"Time per epoch: {tock - tick}")
-            print(f"Mean loss: {loss_total / NUM_BATCHES}")
-            print(f"Total loss: {loss_total}")
+            print(f"Epoch: {epoch + 1} out of {self.epochs}")
+            print(f"Time per epoch: {time.time() - tick}")
+            print(f"Mean loss: {loss_total / NUM_BATCHES:.4f}")
+            print(f"Total loss: {loss_total:.4f}")
             print("~~~~~~~~~~~~~~~~~~")
-            print("@@@@@@@@@@@@@@@@@@")
-            print(f"Accuracy of the model: {correctly_classified / total_classified * 100.0}%")
-            print("@@@@@@@@@@@@@@@@@@")
 
-            # TODO: saving pretrained weights
+        # TODO: speedy implementation, to be potentially fixed
+        if self.save_weights:
+            model.save_weights()
 
-        return MODEL
+        return model
