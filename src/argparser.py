@@ -12,7 +12,7 @@ argument_parser.add_argument(
     "--paths_img",
     action="store",
     type=str,
-    help="Provide images paths to generate story",
+    help="Provide images paths to generate story (preferebly folder in which text files can be found recursively)",
     required=True,
     nargs="+"
 )
