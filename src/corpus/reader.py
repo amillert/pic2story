@@ -8,13 +8,11 @@ from ..helper import utils as utl
 
 class Reader:
     def __init__(self, args):
-        import src
-        def_books_paths = os.listdir(os.path.join(pgen.parent_path(src.SRC_DIR), "data/kidsbooks"))
-
-        self.paths_books = args.paths_books if args.paths_books else def_books_paths
+        self.paths_books = args.paths_books
         self.ctx = args.ngrams
         self.read_corpus = args.read_corpus
         self.save_corpus = args.save_corpus
+        self.books_to_read = args.books if args.books else 500
 
     @staticmethod
     def line_rule(line):
@@ -49,7 +47,8 @@ class Reader:
         return res
 
     # TODO: definitely needs a refactor and optimization work
-    def generate_windowed_sentences(self, sentences, word2idx, window):
+    @staticmethod
+    def generate_windowed_sentences(sentences, word2idx, window):
         res = []
         for sen in sentences:
             tokens = [word2idx[s] for s in sen.split()]
@@ -72,7 +71,7 @@ class Reader:
         #       in terms of text generation (same with chapters, etc.)
 
         books = []
-        for book in pgen.generate_absolute_paths(self.paths_books)[:1500]:
+        for book in pgen.generate_absolute_paths(self.paths_books)[:self.books_to_read]:
             with open(book) as w:
                 # TODO: split on end of sentence punctuation marks (dot is not always end of sentence);
                 #       think about punctuation in general
@@ -116,10 +115,6 @@ class Reader:
         contents = os.listdir('/'.join(self.read_corpus.split("/")[:-1]) + "/")
         if self.read_corpus and len(contents) and self.read_corpus.split("/")[-1] in contents:
             corpus_data = utl.load_obj(self.read_corpus)
-
-            # ln = len(corpus_data.word2idx)
-            # assert ln > 100, (f"Corpus is either too small (size: {ln}), or it has not been created yet; "
-            #                   f"either way - standard procedure will continue")
         else:
             corpus_data = CorpusData(*self.preprocess())
 
