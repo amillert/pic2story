@@ -12,8 +12,18 @@ The emphasis is put on the latter part of the project; therefore, the image obje
 - custom object detection,
 - deployment of the app as a web application to allow accessability for the online users.
 
+## Install Pic2Story
+Download the source code from github: 
+``` bash
+git clone https://github.com/amillert/pic2story.git
+```
+
 ## Running
-In order to properly run all the commands one must ensure that the current directory is `pic2story/`.
+In order to properly run all the commands one must ensure that the current directory is `pic2story/`:
+``` bash
+cd pic2story/
+```
+
 ### Install YOLO
 ``` bash
 ./install-YOLO.sh
