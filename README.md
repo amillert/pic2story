@@ -11,3 +11,35 @@ The emphasis is put on the latter part of the project; therefore, the image obje
 ### To be considered in further stages:
 - custom object detection,
 - deployment of the app as a web application to allow accessability for the online users.
+
+## Running
+In order to properly run all the commands one must ensure that the current directory is `pic2story/`.
+### Install YOLO
+``` bash
+./install-YOLO.sh
+```
+
+### Download Textual Books
+The dataset comes from the [Project Gutenberg's](https://www.gutenberg.org/) website. In order to download the data and unzip recursively located `*.txt` files, one should run the follwoing command:
+``` bash
+./data/gutten/getgutenbergdata.sh
+```
+The following script will first download the data, then run unzipping python script.
+
+### Create and Activate Conda Virtual Environment
+
+``` bash
+conda env create -f pic2story.yml; conda activate pic2story
+```
+
+### Script's Help
+In order to find out about the arguements required to successfully run the scrip, one should run:
+``` bash
+./scr/main.py -h
+```
+
+### Run Pic2Story
+In order to run the whole application with sample parameters, one should run:
+``` bash
+./run.sh
+```
