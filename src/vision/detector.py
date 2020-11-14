@@ -17,10 +17,16 @@ class Detector:
         self.classes = [x.strip() for x in open(args.labels).readlines()]
         self.net = cv2.dnn.readNetFromDarknet(args.net_config, args.transfer_weights)
 
+    @staticmethod
+    def generate_absolute_paths(paths):
+        abs_paths = [os.path.abspath(path) if not os.path.isabs(path) else path for path in paths]
+        return [[os.path.join(abs_path, pic) for pic in os.listdir(abs_path)]
+                if os.path.isdir(abs_path) else [abs_path] for abs_path in abs_paths]
+
     def detect(self):
         # allows duplicates, in case detected in different pictures
         # TODO: think whether that's desired
-        return [label for img_path in fct.flatten(pgen.generate_absolute_paths(self.paths_img))
+        return [label for img_path in fct.flatten(self.generate_absolute_paths(self.paths_img))
                 for label in set(self.predict_label(img_path))]
 
     def predict_label(self, img):
