@@ -151,8 +151,15 @@ argument_parser.add_argument(
     "--drop_prob",
     action="store",
     type=float,
-    help="layers",
+    help="drop probs",
     required=True
+)
+argument_parser.add_argument(
+    "--books",
+    action="store",
+    type=int,
+    help="Amount of books to read; more books more RAM used (32GB not sufficient for whole dataset)",
+    required=False
 )
 
 args = argument_parser.parse_args()
