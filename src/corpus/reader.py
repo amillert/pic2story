@@ -2,7 +2,6 @@ from collections import Counter
 import os
 
 from ..corpus.corpus_data import CorpusData
-from ..helper import functional as fct
 from ..helper import paths_generator as pgen
 from ..helper import utils as utl
 
@@ -72,42 +71,55 @@ class Reader:
         # TODO: check whether distinguishing one book from the other matters
         #       in terms of text generation (same with chapters, etc.)
 
-        for book in fct.flatten(pgen.generate_absolute_paths(self.paths_books)):
+        books = []
+        for book in pgen.generate_absolute_paths(self.paths_books)[:1500]:
             with open(book) as w:
                 # TODO: split on end of sentence punctuation marks (dot is not always end of sentence);
                 #       think about punctuation in general
+                try:
+                    lines = [line.strip()
+                                 .replace("\n", "")
+                                 .replace("'t", " not")
+                                 .replace("'s", " is")
+                                 .replace("'d", " would")
+                                 .replace("'ve", "have")
+                             for line in w.read().split("\n\n") if self.line_rule(line)]
+                    books.extend(lines)
+                except:
+                    pass
 
-                lines = [line.strip()
-                             .replace("\n", "")
-                             .replace("'t", " not")
-                             .replace("'s", " is")
-                             .replace("'d", "would")
-                             .replace("'ve", "have")
-                         for line in w.read().split("\n\n") if self.line_rule(line)]
-                tokenized_sentences = [' '.join([self.fil(word.lower()) for word in sentence.split()]) for sentence in ' '.join(lines).split(".")]
-                tokenized_sentences = [sen for sen in tokenized_sentences if sen]
+        tokenized_sentences = [' '.join([self.fil(word.lower()) for word in sentence.split()])
+                               for sentence in ' '.join(books).split(".")]
+        tokenized_sentences = [sen for sen in tokenized_sentences if sen]
+        print("tokenization done")
 
-                naive_tokens = [token for sen in tokenized_sentences for token in sen.split()]
+        naive_tokens = [token for sen in tokenized_sentences for token in sen.split()]
 
-                word2freq = Counter(naive_tokens)
-                vocabulary = ["<PAD>"] + list(word2freq.keys())
-                word2idx = {"<PAD>": 0}
-                word2idx.update({token: i + 1 for i, token in enumerate(vocabulary)})
-                idx2word = {v: k for k, v in word2idx.items()}
+        word2freq = Counter(naive_tokens)
+        print("word2freq done")
+        vocabulary = ["<PAD>"] + list(word2freq.keys())
+        print("vocab done")
+        word2idx = {"<PAD>": 0}
+        word2idx.update({token: i + 1 for i, token in enumerate(vocabulary)})
+        print("word2idx done")
+        idx2word = {v: k for k, v in word2idx.items()}
+        print("index done")
 
-                window = 4
-                # decided on windowed sentences
-                windowed_sentences = self.generate_windowed_sentences(tokenized_sentences, word2idx, window)
+        window = 4
+        # decided on windowed sentences
+        windowed_sentences = self.generate_windowed_sentences(tokenized_sentences, word2idx, window)
+        print("windowing done")
 
-            return windowed_sentences, vocabulary, word2idx, idx2word
+        return windowed_sentences, vocabulary, word2idx, idx2word
 
     def read(self):
-        if self.read_corpus and len(os.listdir('/'.join(self.read_corpus.split("/")[:-1]) + "/")):
+        contents = os.listdir('/'.join(self.read_corpus.split("/")[:-1]) + "/")
+        if self.read_corpus and len(contents) and self.read_corpus.split("/")[-1] in contents:
             corpus_data = utl.load_obj(self.read_corpus)
 
-            ln = len(corpus_data.word2idx)
-            assert ln > 100, (f"Corpus is either too small (size: {ln}), or it has not been created yet; "
-                              f"either way - standard procedure will continue")
+            # ln = len(corpus_data.word2idx)
+            # assert ln > 100, (f"Corpus is either too small (size: {ln}), or it has not been created yet; "
+            #                   f"either way - standard procedure will continue")
         else:
             corpus_data = CorpusData(*self.preprocess())
 
