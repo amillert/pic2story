@@ -2,3 +2,7 @@
 __pycache__
 utils/yolov3.weights
 data/
+build/
+cache/
+dist/
+pic2story.egg-info/
