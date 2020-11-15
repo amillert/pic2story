@@ -63,11 +63,10 @@ argument_parser.add_argument(
     nargs="+"
 )
 argument_parser.add_argument(
-    "--ngrams",
+    "--window",
     action="store",
     type=int,
-    help="Provide the amount of context words (per side -> e.g. if you want to consider 4 neighbour-words, use - 2)"
-         " around the target word to create ngrams",
+    help="Provide the size of window to generate subsentences",
     required=True
 )
 argument_parser.add_argument(

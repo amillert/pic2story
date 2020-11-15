@@ -9,42 +9,15 @@ from ..helper import utils as utl
 class Reader:
     def __init__(self, args):
         self.paths_books = args.paths_books
-        self.ctx = args.ngrams
         self.read_corpus = args.read_corpus
         self.save_corpus = args.save_corpus
+        self.window = args.window if args.window else 6
         self.books_to_read = args.books if args.books else 500
 
     @staticmethod
     def line_rule(line):
         ln = len(line) if len(line) else -1
         return ln > 5 and len([xi for xi in line if xi.isalpha()]) / ln >= 0.6
-
-    def generate_pad(self, n):
-        return ["<PAD>"] * (self.ctx - n)
-
-    def generate_pads(self, left, right):
-        return self.generate_pad(len(left)) + left, right + self.generate_pad(len(right))
-
-    def generate_left_idx(self, i):
-        return [x for x in range(i - self.ctx, i) if x >= 0]
-
-    def generate_right_idx(self, i, ln):
-        return [x for x in range(i + 1, i + 1 + self.ctx) if x < ln]
-
-    def generate_idx(self, i, s):
-        return [s[i] for i in self.generate_left_idx(i)], [s[i] for i in self.generate_right_idx(i, len(s))]
-
-    def extract_context(self, i, sentence):
-        return self.generate_pads(*self.generate_idx(i, sentence))
-
-    # TODO: (just as an example); check what will be needed for the generation
-    def generate_ngrams(self, sentence):
-        res = []
-        for i, target in enumerate(sentence):
-            left_ctx, right_ctx = self.extract_context(i, sentence)
-            res.append((target, left_ctx + right_ctx))
-
-        return res
 
     # TODO: definitely needs a refactor and optimization work
     @staticmethod
@@ -104,9 +77,8 @@ class Reader:
         idx2word = {v: k for k, v in word2idx.items()}
         print("index done")
 
-        window = 4
         # decided on windowed sentences
-        windowed_sentences = self.generate_windowed_sentences(tokenized_sentences, word2idx, window)
+        windowed_sentences = self.generate_windowed_sentences(tokenized_sentences, word2idx, self.window)
         print("windowing done")
 
         return windowed_sentences, vocabulary, word2idx, idx2word
