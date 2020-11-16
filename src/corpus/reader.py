@@ -1,9 +1,13 @@
 from collections import Counter
 import os
 import pickle
+import re
 
 from src.corpus.preprocess.corpus_data import CorpusData
 from src.helper import paths_generator as pgen
+
+FROM_TABLE_OF_CONTENTS = "(^.{0,4}[0-9].*\n*)+(.|\n)*"
+AFTER_THE_END = "((THE END)|(The end)|(The End))(.|\n)*"
 
 
 class Reader:
@@ -28,60 +32,47 @@ class Reader:
                 return pickle.load(rfile)
 
     @staticmethod
-    def line_rule(line):
-        length = len(line) if line else -1
-        return length > 5 and len([xi for xi in line if xi.isalpha()]) / length >= 0.6
-
-    @staticmethod
-    def generate_windowed_sentences(sentences, word2idx, window):
+    def generate_windowed_sentences(tokenized, word2idx, window):
         res = []
-        for sen in sentences:
-            tokens = [word2idx[s] for s in sen.split()]
-            abs_diff = abs(window - len(tokens))
+        tokens = [word2idx[s] for s in tokenized]
+        for i in range(len(tokens) - window):
+            res.append(tokens[i:i+window])
 
-            if len(tokens) < window:
-                res.append(tokens + [word2idx["<PAD>"]] * abs_diff)
-            else:
-                for i in range(0, abs_diff + 1):
-                    res.append(tokens[i:i + window])
-
+        print(res[-2:])
         return res
-
-    @staticmethod
-    def fil(word):
-        return ''.join([x for x in word if x.isalpha() or x.isnumeric() or x in "!?,.-:;\"'"])
 
     def load_books(self):
         books = []
+         #for book in pgen.generate_absolute_paths(self.paths_books):
         for book in pgen.generate_absolute_paths(self.paths_books)[:self.books_to_read]:
             with open(book, "r") as rfile:
                 # TODO: split on end of sentence punctuation marks
                 #       (dot is not always end of sentence);
                 #       think about punctuation in general
                 try:
-                    lines = [line.strip()
-                                 .replace("\n", "")
-                                 .replace("'t", " not")
-                                 .replace("'s", " is")
-                                 .replace("'d", " would")
-                                 .replace("'ve", "have")
-                             for line in rfile.read().split("\n\n") if self.line_rule(line)]
-                    books.extend(lines)
+                    text = rfile.read()
+                    # if "THE END" not in text or "Contents" not in text:
+                    #     continue
+                    # else:
+                    books.append(re.sub(
+                        "\[([A-Za-z0-9.,;]| )+\]", "", re.sub(
+                            AFTER_THE_END, "", re.sub(
+                                FROM_TABLE_OF_CONTENTS, "", ' '.join(text.split()), 1))
+                            .replace("-\n", "")
+                            .replace("'t", " not")
+                            .replace("'d", " would")
+                            .replace("'s", " is")
+                            .replace("'ve", " have")))
                 except:
                     pass
 
-        return books
+        return [xi.strip() for x in re.split('(\s"|[,.;:?!"-]\s)', ' '.join(books)) for xi in x.split()]
 
     def preprocess(self):
-        books = self.load_books()
-        tokenized_sentences = [' '.join([self.fil(word.lower()) for word in sentence.split()])
-                               for sentence in ' '.join(books).split(".")]
-        tokenized_sentences = [sen for sen in tokenized_sentences if sen]
+        tokenized_books = self.load_books()
         print("tokenization done")
 
-        naive_tokens = [token for sen in tokenized_sentences for token in sen.split()]
-
-        word2freq = Counter(naive_tokens)
+        word2freq = Counter(tokenized_books)
         print("word2freq done")
         vocabulary = ["<PAD>"] + list(word2freq.keys())
         print("vocab done")
@@ -92,7 +83,7 @@ class Reader:
         print("index done")
 
         windowed_sentences = self.generate_windowed_sentences(
-            tokenized_sentences, word2idx, self.window
+            tokenized_books, word2idx, self.window
         )
         print("windowing done")
 
