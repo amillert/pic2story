@@ -2,7 +2,7 @@
 
 from src.argparser import args
 from src.vision.detector import Detector
-from src.model.trainer.runner import Runner
+from src.model.runner import Runner
 
 import random
 
