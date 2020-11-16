@@ -26,7 +26,7 @@ cd pic2story/
 
 ### Install YOLO
 ``` bash
-./install-YOLO.sh
+./data/yolo_objects/install-YOLO.sh
 ```
 
 ### Download Textual Books
