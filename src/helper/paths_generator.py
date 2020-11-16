@@ -18,11 +18,11 @@ def generate_absolute_paths(paths):
         if os.path.isdir(p):
             for x in os.listdir(p):
                 if "-" not in x:
-                    xd = os.path.join(p, x)
-                    if os.path.isdir(xd):
-                        abs_paths.extend(extract(xd))
+                    joined = os.path.join(p, x)
+                    if os.path.isdir(joined):
+                        abs_paths.extend(extract(joined))
                     else:
-                        abs_paths.append(extract(xd))
+                        abs_paths.append(extract(joined))
         else: abs_paths.append(p)
 
     return abs_paths

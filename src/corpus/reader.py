@@ -1,9 +1,9 @@
 from collections import Counter
 import os
+import pickle
 
-from ..corpus.corpus_data import CorpusData
+from ..corpus.preprocess.corpus_data import CorpusData
 from ..helper import paths_generator as pgen
-from ..helper import utils as utl
 
 
 class Reader:
@@ -15,11 +15,23 @@ class Reader:
         self.books_to_read = args.books if args.books else 500
 
     @staticmethod
+    def save_obj(obj, path):
+        with open(path, "wb") as f:
+            pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+    def load_obj(self, path):
+        if os.path.isdir(path):
+            for c in os.listdir(path):
+                return self.load_obj(os.path.abspath(os.path.join(path, c)))
+        else:
+            with open(path, "rb") as f:
+                return pickle.load(f)
+
+    @staticmethod
     def line_rule(line):
         ln = len(line) if len(line) else -1
         return ln > 5 and len([xi for xi in line if xi.isalpha()]) / ln >= 0.6
 
-    # TODO: definitely needs a refactor and optimization work
     @staticmethod
     def generate_windowed_sentences(sentences, word2idx, window):
         res = []
@@ -40,9 +52,6 @@ class Reader:
         return ''.join([x for x in word if x.isalpha() or x.isnumeric() or x in "!?,.-:;\"'"])
 
     def preprocess(self):
-        # TODO: check whether distinguishing one book from the other matters
-        #       in terms of text generation (same with chapters, etc.)
-
         books = []
         for book in pgen.generate_absolute_paths(self.paths_books)[:self.books_to_read]:
             with open(book) as w:
@@ -77,7 +86,6 @@ class Reader:
         idx2word = {v: k for k, v in word2idx.items()}
         print("index done")
 
-        # decided on windowed sentences
         windowed_sentences = self.generate_windowed_sentences(tokenized_sentences, word2idx, self.window)
         print("windowing done")
 
@@ -86,11 +94,11 @@ class Reader:
     def read(self):
         contents = os.listdir('/'.join(self.read_corpus.split("/")[:-1]) + "/")
         if self.read_corpus and len(contents) and self.read_corpus.split("/")[-1] in contents:
-            corpus_data = utl.load_obj(self.read_corpus)
+            corpus_data = self.load_obj(self.read_corpus)
         else:
             corpus_data = CorpusData(*self.preprocess())
 
             if self.save_corpus:
-                utl.save_obj(corpus_data, self.save_corpus)
+                self.save_obj(corpus_data, self.save_corpus)
 
         return corpus_data

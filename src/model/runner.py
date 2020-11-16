@@ -1,5 +1,5 @@
-from ..preprocessing.custom_dataset import CustomDataset
-from ..word_LSTM import WordLSTM
+from src.corpus.preprocess.custom_dataset import CustomDataset
+from src.model.word_LSTM import WordLSTM
 
 import random
 import time
@@ -66,9 +66,12 @@ class Runner:
         # batch size is 1
         h = model.init_hidden(1)
 
-        # TODO (1.1): dataset is too small, so the detected labels are not even in the vocabulary yielding error
-        # tokens = [self.corpus.word2idx[token] for token in prime.split() if not token is "bicycle"]
-        tokens = [self.corpus.word2idx[token] for token in ["wife", "train", "vinegar", "houses"]]
+        # TODO (1.1): dataset is too small, so the detected labels
+        #             are not even in the vocabulary yielding error
+        # tokens = [self.corpus.word2idx[token]
+        #           for token in prime.split() if not token is "bicycle"]
+        tokens = [self.corpus.word2idx[token]
+                  for token in ["wife", "train", "vinegar", "houses"]]
 
         # predict next token
         for t in tokens:
@@ -103,9 +106,12 @@ class Runner:
         # TODO: what it's for?
         CLIP = 1
 
-        NUM_BATCHES = np.ceil(data_size / self.batch_size)
+        # print(data_size, self.batch_size)
+        num_batches = int(data_size / self.batch_size)
+        print(f"upcoming num batches: {num_batches}")
 
-        for epoch in range(self.epochs):
+        # for epoch in range(self.epochs):
+        for epoch in range(1):
             tick = time.time()
             loss_total = 0.0
             batch_count = 0
@@ -138,14 +144,14 @@ class Runner:
 
                 optimizer.step()
 
-                if not batch_count % 100 and batch_count > 0:
+                if num_batches % batch_count == 100:
                     print(f"Batch {batch_count} of epoch {epoch + 1}")
                     print('mean loss {0:.4f}'.format(loss_total / batch_count))
 
             print("~~~~~~~~~~~~~~~~~~")
             print(f"Epoch: {epoch + 1} out of {self.epochs}")
             print(f"Time per epoch: {time.time() - tick}")
-            print(f"Mean loss: {loss_total / NUM_BATCHES:.4f}")
+            print(f"Mean loss: {loss_total / num_batches:.4f}")
             print(f"Total loss: {loss_total:.4f}")
             print("~~~~~~~~~~~~~~~~~~")
 
