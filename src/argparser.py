@@ -12,7 +12,8 @@ argument_parser.add_argument(
     "--paths_img",
     action="store",
     type=str,
-    help="Provide images paths to generate story (preferebly folder in which text files can be found recursively)",
+    help="Provide images paths to generate story "
+         "(preferebly folder in which text files can be found recursively)",
     required=True,
     nargs="+"
 )
@@ -50,7 +51,8 @@ argument_parser.add_argument(
     "--confidence",
     action="store",
     type=float,
-    help="Provide confidence to filter out irrelevant objects' predictions from the YOLO object detection",
+    help="Provide confidence to filter out irrelevant "
+         "objects' predictions from the YOLO object detection",
     required=True
 )
 argument_parser.add_argument(
@@ -73,7 +75,8 @@ argument_parser.add_argument(
     "--read_corpus",
     action="store",
     type=str,
-    help="If provided, unpickles the corpus object from the file; if doesn't work, standard procedure will kick in"
+    help="If provided, unpickles the corpus object from the file; "
+         "if doesn't work, standard procedure will kick in"
 )
 argument_parser.add_argument(
     "--save_corpus",
@@ -89,8 +92,9 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     "--logging",
     action="store_true",
-    help="If provided, logging mode will be turned on; adds some more insights to the learning process, "
-         "but may result in slower time of learning due to irrelevant side effects"
+    help="If provided, logging mode will be turned on; adds some more insights "
+         "to the learning process, but may result in slower time of learning "
+         "due to irrelevant side effects"
 )
 argument_parser.add_argument(
     "--batch_size",
@@ -157,7 +161,8 @@ argument_parser.add_argument(
     "--books",
     action="store",
     type=int,
-    help="Amount of books to read; more books more RAM used (32GB not sufficient for whole dataset)",
+    help="Amount of books to read; more books more RAM used "
+         "(32GB not sufficient for whole dataset)",
     required=False
 )
 

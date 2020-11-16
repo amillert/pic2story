@@ -2,8 +2,8 @@ from collections import Counter
 import os
 import pickle
 
-from ..corpus.preprocess.corpus_data import CorpusData
-from ..helper import paths_generator as pgen
+from src.corpus.preprocess.corpus_data import CorpusData
+from src.helper import paths_generator as pgen
 
 
 class Reader:
@@ -16,21 +16,21 @@ class Reader:
 
     @staticmethod
     def save_obj(obj, path):
-        with open(path, "wb") as f:
-            pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+        with open(path, "wb") as wfile:
+            pickle.dump(obj, wfile, pickle.HIGHEST_PROTOCOL)
 
     def load_obj(self, path):
         if os.path.isdir(path):
-            for c in os.listdir(path):
-                return self.load_obj(os.path.abspath(os.path.join(path, c)))
+            for dir_path in os.listdir(path):
+                return self.load_obj(os.path.abspath(os.path.join(path, dir_path)))
         else:
-            with open(path, "rb") as f:
-                return pickle.load(f)
+            with open(path, "rb") as rfile:
+                return pickle.load(rfile)
 
     @staticmethod
     def line_rule(line):
-        ln = len(line) if len(line) else -1
-        return ln > 5 and len([xi for xi in line if xi.isalpha()]) / ln >= 0.6
+        length = len(line) if line else -1
+        return length > 5 and len([xi for xi in line if xi.isalpha()]) / length >= 0.6
 
     @staticmethod
     def generate_windowed_sentences(sentences, word2idx, window):
@@ -51,11 +51,12 @@ class Reader:
     def fil(word):
         return ''.join([x for x in word if x.isalpha() or x.isnumeric() or x in "!?,.-:;\"'"])
 
-    def preprocess(self):
+    def load_books(self):
         books = []
         for book in pgen.generate_absolute_paths(self.paths_books)[:self.books_to_read]:
-            with open(book) as w:
-                # TODO: split on end of sentence punctuation marks (dot is not always end of sentence);
+            with open(book, "r") as rfile:
+                # TODO: split on end of sentence punctuation marks
+                #       (dot is not always end of sentence);
                 #       think about punctuation in general
                 try:
                     lines = [line.strip()
@@ -64,11 +65,15 @@ class Reader:
                                  .replace("'s", " is")
                                  .replace("'d", " would")
                                  .replace("'ve", "have")
-                             for line in w.read().split("\n\n") if self.line_rule(line)]
+                             for line in rfile.read().split("\n\n") if self.line_rule(line)]
                     books.extend(lines)
                 except:
                     pass
 
+        return books
+
+    def preprocess(self):
+        books = self.load_books()
         tokenized_sentences = [' '.join([self.fil(word.lower()) for word in sentence.split()])
                                for sentence in ' '.join(books).split(".")]
         tokenized_sentences = [sen for sen in tokenized_sentences if sen]
@@ -86,14 +91,17 @@ class Reader:
         idx2word = {v: k for k, v in word2idx.items()}
         print("index done")
 
-        windowed_sentences = self.generate_windowed_sentences(tokenized_sentences, word2idx, self.window)
+        windowed_sentences = self.generate_windowed_sentences(
+            tokenized_sentences, word2idx, self.window
+        )
         print("windowing done")
 
         return windowed_sentences, vocabulary, word2idx, idx2word
 
     def read(self):
         contents = os.listdir('/'.join(self.read_corpus.split("/")[:-1]) + "/")
-        if self.read_corpus and len(contents) and self.read_corpus.split("/")[-1] in contents:
+        # if self.read_corpus and contents and self.read_corpus.split("/")[-1] in contents:
+        if self.read_corpus and self.read_corpus.split("/")[-1] in contents:
             corpus_data = self.load_obj(self.read_corpus)
         else:
             corpus_data = CorpusData(*self.preprocess())

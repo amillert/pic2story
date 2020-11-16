@@ -1,11 +1,11 @@
-from src.corpus.reader import Reader
-
 import os
 from typing import Tuple
 
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+
+from src.corpus.reader import Reader
 
 
 class CustomDataset(Dataset):
@@ -31,10 +31,6 @@ class CustomDataset(Dataset):
             self.shape = self.y_data.shape
 
             self.len = len(x_data)
-
-            # torch.save(self.x_data, os.path.join(root_dir, "x_data.pt"))
-            # torch.save(self.y_data, os.path.join(root_dir, "y_data.pt"))
-            # print("saving to files done")
 
     def __len__(self):
         return self.len

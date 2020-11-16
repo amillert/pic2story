@@ -15,17 +15,16 @@ class WordLSTM(nn.Module):
         self.emb_layer = nn.Embedding(vocab_size, feature_size)
         self.lstm = nn.LSTM(feature_size, n_hidden, n_layers, dropout=drop_prob, batch_first=True)
         self.dropout = nn.Dropout(drop_prob)
-        self.fc = nn.Linear(n_hidden, vocab_size)
+        self.final_layer = nn.Linear(n_hidden, vocab_size)
 
     def forward(self, x, hidden):
         embedded = self.emb_layer(x)
 
         lstm_output, hidden = self.lstm(embedded, hidden)
         out = self.dropout(lstm_output)
-        # out = out.contiguous().view(-1, self.n_hidden)
         out = out.reshape(-1, self.n_hidden)
 
-        out = self.fc(out)
+        out = self.final_layer(out)
 
         return out, hidden
 
@@ -33,14 +32,18 @@ class WordLSTM(nn.Module):
         weight = next(self.parameters()).data
 
         # if GPU is available
-        if (torch.cuda.is_available()):
-            hidden = (weight.new(self.n_layers, batch_size, self.n_hidden).zero_().cuda(),
-                      weight.new(self.n_layers, batch_size, self.n_hidden).zero_().cuda())
+        if torch.cuda.is_available():
+            hidden = (
+                weight.new(self.n_layers, batch_size, self.n_hidden).zero_().cuda(),
+                weight.new(self.n_layers, batch_size, self.n_hidden).zero_().cuda()
+            )
 
         # if GPU is not available
         else:
-            hidden = (weight.new(self.n_layers, batch_size, self.n_hidden).zero_(),
-                      weight.new(self.n_layers, batch_size, self.n_hidden).zero_())
+            hidden = (
+                weight.new(self.n_layers, batch_size, self.n_hidden).zero_(),
+                weight.new(self.n_layers, batch_size, self.n_hidden).zero_()
+            )
 
         return hidden
 
@@ -59,4 +62,6 @@ class WordLSTM(nn.Module):
                 arr = np.array([[float(x) for x in line.strip().decode("utf-8").split()]
                                 for line in f.readlines()], dtype=float)
 
-            self.emb_layer.weight = torch.nn.Parameter(torch.from_numpy(arr).float(), requires_grad=True)  # I guess
+            self.emb_layer.weight = torch.nn.Parameter(
+                torch.from_numpy(arr).float(), requires_grad=True
+            )
