@@ -25,6 +25,7 @@ cd pic2story/
 ```
 
 ### Install YOLO
+The script installs YOLO and downloads required weights for the model
 ``` bash
 ./data/yolo_objects/install-YOLO.sh
 ```
