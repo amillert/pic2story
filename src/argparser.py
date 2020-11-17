@@ -1,3 +1,6 @@
+"""
+Module with the whole argparser
+"""
 import argparse
 
 argument_parser = argparse.ArgumentParser(

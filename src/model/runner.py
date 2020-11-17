@@ -1,3 +1,7 @@
+"""
+Module responsible for implementing Runner class
+"""
+
 import random
 import time
 
@@ -12,7 +16,15 @@ from src.model.word_LSTM import WordLSTM
 
 
 class Runner:
+    """
+    Runner class responsible for running the learning process, prediction, etc.
+    """
     def __init__(self, args):
+        """
+        Constructor of the Runner class
+
+        :param args: arguments from the argparser
+        """
         self.args = args
         # TODO: use these (2)
         self.load_x = False
@@ -36,6 +48,14 @@ class Runner:
         self.corpus = self.dataset.corpus
 
     def predict(self, model, token, hidden=None):
+        """
+        Method responsible for the prediction
+
+        :param model: WordLSTM
+        :param token: int
+        :param hidden: some state of LSTM (?)
+        :return:
+        """
         x = np.array([[token]])
 
         inputs = torch.from_numpy(x)
@@ -56,6 +76,14 @@ class Runner:
         return sampled_token_index, hidden
 
     def generate(self, model, size, prime):
+        """
+        Method responsible for the text-generation
+
+        :param model: WordLSTM
+        :param size: int
+        :param prime: list[str]
+        :return: WordLSTM
+        """
         # push to GPU
         model.to(self.device)
         model.load_weights(self.load_pretrained)
@@ -85,6 +113,11 @@ class Runner:
         return ' '.join([self.corpus.idx2word[token] for token in tokens])
 
     def learn(self):
+        """
+        Method performing the whole learning process
+
+        :return: WordLSTM
+        """
         data_size, feature_size = self.dataset.shape
 
         print(f"Amount of data read: {data_size}")
@@ -118,8 +151,8 @@ class Runner:
         num_batches = int(data_size / self.batch_size)
         print(f"upcoming num batches: {num_batches}")
 
-        # for epoch in range(self.epochs):
-        for epoch in range(1):
+        # for epoch in range(1):
+        for epoch in range(self.epochs):
             tick = time.time()
             loss_total = 0.0
             batch_count = 0
@@ -151,7 +184,7 @@ class Runner:
 
                 optimizer.step()
 
-                if num_batches % batch_count == 100:
+                if num_batches % batch_count == 10:
                     print(f"Batch {batch_count} of epoch {epoch + 1}")
                     print('mean loss {0:.4f}'.format(loss_total / batch_count))
 

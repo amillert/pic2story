@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""
+Main of the whole project
+"""
 
 import random
 

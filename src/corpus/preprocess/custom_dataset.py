@@ -1,5 +1,8 @@
+"""
+Module implementing the CustomDataset(Dataset) class
+"""
+
 import os
-from typing import Tuple
 
 import numpy as np
 import torch
@@ -9,7 +12,15 @@ from src.corpus.reader import Reader
 
 
 class CustomDataset(Dataset):
+    """
+    CustomDataset class needed to create mini-batches using PyTorch
+    """
     def __init__(self, args):
+        """
+        Constructor of the CustomDataset
+
+        :param args: arguments from the argparser
+        """
         self.args = args
         self.len = 0
         if args.load_data:
@@ -33,7 +44,18 @@ class CustomDataset(Dataset):
             self.len = len(x_data)
 
     def __len__(self):
+        """
+        Method responsible for providing length of the dataset
+
+        :return: int
+        """
         return self.len
 
-    def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx):
+        """
+        Method responsible for indexing a given tensor pairs
+
+        :param idx: int
+        :return: tuple[(torch.Tensor, torch.Tensor)]
+        """
         return self.x_data[idx], self.y_data[idx]
