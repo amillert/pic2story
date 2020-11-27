@@ -101,7 +101,6 @@ class WordLSTM(nn.Module):
                 arr = np.array([[float(x) for x in line.strip().decode("utf-8").split()]
                                 for line in f.readlines()], dtype=float)
 
-            self.emb_layer.weight = torch.nn.Parameter(
+            self.emb_layer.weight.data = torch.nn.Parameter(
                 torch.from_numpy(arr).float(), requires_grad=True
             )
-        # TODO: return ?

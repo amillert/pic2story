@@ -56,13 +56,13 @@ class Runner:
         :param hidden: some state of LSTM (?)
         :return:
         """
-        x = np.array([[token]])
+        X = np.array([[token]])
 
-        inputs = torch.from_numpy(x)
-        inputs.to(self.device)
+        # inputs = torch.from_numpy(x)
+        # inputs.to(self.device)
 
         hidden = tuple([each.data for each in hidden])
-        out, hidden = model(inputs, hidden)
+        out, hidden = model(X, hidden)
         pred = F.softmax(out, dim=1).data
 
         predicted = pred.cpu().numpy()
@@ -75,7 +75,7 @@ class Runner:
 
         return sampled_token_index, hidden
 
-    def generate(self, model, size, prime):
+    def generate(self, size, prime):
         """
         Method responsible for the text-generation
 
@@ -85,32 +85,72 @@ class Runner:
         :return: WordLSTM
         """
         # push to GPU
-        model.to(self.device)
-        model.load_weights(self.load_pretrained)
-        model.eval()
+        # model.to(self.device)
 
-        # batch size is 1
-        hidden = model.init_hidden(1)
+        _, feature_size = self.dataset.shape
 
-        # TODO (1.1): dataset is too small, so the detected labels
-        #             are not even in the vocabulary yielding error
-        # tokens = [self.corpus.word2idx[token]
-        #           for token in prime.split() if not token is "bicycle"]
-        tokens = [self.corpus.word2idx[token]
-                  for token in ["wife", "train", "vinegar", "houses"]]
+        model = WordLSTM(
+            len(self.corpus.vocabulary) + 1,
+            feature_size,
+            self.hidden,
+            self.layers,
+            0.3
+        )
 
-        # predict next token
-        for tok in tokens:
-            token, hidden = self.predict(model, tok, hidden)
-        # TODO: why it's outside? - it's been this way in original code...
-        tokens.append(token)
+        if self.load_pretrained:
+            import os
+            cache_path = os.path.join(os.path.abspath(os.path.curdir), "cache")
+            path = "/home/devmood/PycharmProjects/pic2story/cache/model"
+            if "model" in os.listdir(cache_path):
+                model.load_state_dict(torch.load(path))
+                # model.load_state_dict(path)
+                print("WCZYTANO!!!!!!!!\n"*4)
 
-        # predict subsequent tokens
-        for _ in range(size - 1):
-            token, hidden = self.predict(model, tokens[-1], hidden)
-            tokens.append(token)
+        # path = "/home/devmood/PycharmProjects/pic2story/cache/model"
+        # model.load_state_dict(torch.load(path))
 
-        return ' '.join([self.corpus.idx2word[token] for token in tokens])
+        # change require grad only for relevant weights
+        for name, param in model.named_parameters():
+            if "final" in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+
+        for name, param in model.named_parameters():
+            print(name, ':', param.requires_grad)
+
+        tokens = [token for token in ["juicy", "sister", "cars", "not"]]
+        print(tokens)
+
+        def predict():
+            model.eval()
+            state_h, state_c = model.init_hidden(len(tokens))
+
+            for i in range(0, size):
+                X = torch.tensor([[self.corpus.word2idx[w]] for w in tokens[i:]])
+                y_pred, (state_h, state_c) = model(X, (state_h, state_c))
+
+                last_word_logits = y_pred[0]  # [-1]
+                p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
+                word_index = np.random.choice(len(last_word_logits), p=p)
+                tokens.append(self.corpus.idx2word[word_index])
+
+            return tokens
+
+        tmp = predict()
+        recent = ""
+        res = ""
+        for x in tmp:
+            if x == recent:
+                continue
+            if x.isalpha():
+                res += " "
+            res += x
+            if x in ".!?":
+                res = res[:-1] + "\n"
+            recent = x
+
+        return res
 
     def learn(self):
         """
@@ -139,63 +179,91 @@ class Runner:
             0.3
         )
 
-        # if self.load_pretrained:
-        model.load_weights(self.load_pretrained)
+        if self.load_pretrained:
+            import os
+            cache_path = os.path.join(os.path.abspath(os.path.curdir), "cache")
+            path = "/home/devmood/PycharmProjects/pic2story/cache/model"
+            if "model" in os.listdir(cache_path):
+                model.load_state_dict(torch.load(path))
+                # model.load_state_dict(path)
+                print("WCZYTANO!!!!!!!!\n"*4)
+
+        # model_new = NeuralNet()
+        # model.load_weights(self.load_pretrained)
+        # print("wczytano wagi")
+
+        # change require grad only for relevant weights
+        for name, param in model.named_parameters():
+            if "final" in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
 
         criterion = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=self.eta)
+        optimizer = torch.optim.Adam(model.parameters(), lr=self.eta)  # 0.5
+        # optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
 
         # TODO: what it's for?
-        clip = 1
+        # clip = 1
 
         num_batches = int(data_size / self.batch_size)
         print(f"upcoming num batches: {num_batches}")
 
-        # for epoch in range(1):
-        for epoch in range(self.epochs):
-            tick = time.time()
+        # model.train()
+
+        for epoch in range(1, self.epochs + 1):
+            # tick = time.time()
             loss_total = 0.0
             batch_count = 0
 
             state_h = model.init_hidden(self.batch_size)
 
+            # optimizer.zero_grad()
+
             for X, y in batches:
                 batch_count += 1
 
-                model.train()
+                # model.train()
 
                 # move to the GPU if possible
-                inputs, targets = X.to(self.device), y.to(self.device)
+                # inputs, targets = X.to(self.device), y.to(self.device)
+                # inputs, targets = X.to(self.device), y.to(self.device)
 
                 hidden = tuple([each.data for each in state_h])
 
-                model.zero_grad()
+                optimizer.zero_grad()
 
-                output, _ = model(inputs, hidden)
+                # output, _ = model(inputs, hidden)
+                output, _ = model(X, hidden)
 
-                loss = criterion(output, targets.view(-1))
+                # loss = criterion(output, targets.view(-1))
+                loss = criterion(output, y.view(-1))
 
                 loss_total += loss.item()
+                print(f"{batch_count}/{num_batches}: loss ~> {loss.item()}, mean ~> {loss_total/batch_count}")
 
                 loss.backward()
 
                 # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
-                nn.utils.clip_grad_norm_(model.parameters(), clip)
+                # nn.utils.clip_grad_norm_(model.parameters(), clip)
 
                 optimizer.step()
 
-                if num_batches % batch_count == 10:
-                    print(f"Batch {batch_count} of epoch {epoch + 1}")
-                    print('mean loss {0:.4f}'.format(loss_total / batch_count))
+                # if not batch_count % 20:
+                # if not batch_count % 5:
+                #     print(f"Batch {batch_count} out of {num_batches}")
+                #     print('mean loss {0:.4f}'.format(loss_total / batch_count))
 
             print("~~~~~~~~~~~~~~~~~~")
-            print(f"Epoch: {epoch + 1} out of {self.epochs}")
-            print(f"Time per epoch: {time.time() - tick}")
+            print(f"Epoch: {epoch} out of {self.epochs}")
+            # print(f"Time per epoch: {time.time() - tick}")
             print(f"Mean loss: {loss_total / num_batches:.4f}")
             print(f"Total loss: {loss_total:.4f}")
             print("~~~~~~~~~~~~~~~~~~")
 
         if self.save_weights:
-            model.save_weights()
+            path = "/home/devmood/PycharmProjects/pic2story/cache/model"
+            torch.save(model.state_dict(), path)
+            # model.save_weights()
 
         return model
