@@ -47,35 +47,7 @@ class Runner:
         self.dataset = CustomDataset(args)
         self.corpus = self.dataset.corpus
 
-    def predict(self, model, token, hidden=None):
-        """
-        Method responsible for the prediction
-
-        :param model: WordLSTM
-        :param token: int
-        :param hidden: some state of LSTM (?)
-        :return:
-        """
-        X = np.array([[token]])
-
-        # inputs = torch.from_numpy(x)
-        # inputs.to(self.device)
-
-        hidden = tuple([each.data for each in hidden])
-        out, hidden = model(X, hidden)
-        pred = F.softmax(out, dim=1).data
-
-        predicted = pred.cpu().numpy()
-        predicted = predicted.reshape(predicted.shape[1],)
-
-        # get indices of top 3 values
-        top_n_idx = predicted.argsort()[-3:][::-1]
-        # randomly select one of the three indices
-        sampled_token_index = top_n_idx[random.sample([0, 1, 2], 1)[0]]
-
-        return sampled_token_index, hidden
-
-    def generate(self, size, prime):
+    def generate(self, size):
         """
         Method responsible for the text-generation
 
@@ -185,12 +157,6 @@ class Runner:
             path = "/home/devmood/PycharmProjects/pic2story/cache/model"
             if "model" in os.listdir(cache_path):
                 model.load_state_dict(torch.load(path))
-                # model.load_state_dict(path)
-                print("WCZYTANO!!!!!!!!\n"*4)
-
-        # model_new = NeuralNet()
-        # model.load_weights(self.load_pretrained)
-        # print("wczytano wagi")
 
         # change require grad only for relevant weights
         for name, param in model.named_parameters():
@@ -201,7 +167,6 @@ class Runner:
 
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=self.eta)  # 0.5
-        # optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
 
         # TODO: what it's for?
         # clip = 1
@@ -209,7 +174,7 @@ class Runner:
         num_batches = int(data_size / self.batch_size)
         print(f"upcoming num batches: {num_batches}")
 
-        # model.train()
+        model.train()
 
         for epoch in range(1, self.epochs + 1):
             # tick = time.time()
@@ -217,8 +182,6 @@ class Runner:
             batch_count = 0
 
             state_h = model.init_hidden(self.batch_size)
-
-            # optimizer.zero_grad()
 
             for X, y in batches:
                 batch_count += 1
@@ -233,14 +196,11 @@ class Runner:
 
                 optimizer.zero_grad()
 
-                # output, _ = model(inputs, hidden)
                 output, _ = model(X, hidden)
 
-                # loss = criterion(output, targets.view(-1))
                 loss = criterion(output, y.view(-1))
 
                 loss_total += loss.item()
-                print(f"{batch_count}/{num_batches}: loss ~> {loss.item()}, mean ~> {loss_total/batch_count}")
 
                 loss.backward()
 
@@ -249,10 +209,9 @@ class Runner:
 
                 optimizer.step()
 
-                # if not batch_count % 20:
-                # if not batch_count % 5:
-                #     print(f"Batch {batch_count} out of {num_batches}")
-                #     print('mean loss {0:.4f}'.format(loss_total / batch_count))
+                if not batch_count % 10:
+                    print(f"Batch {batch_count}/{num_batches}: loss ~> {loss.item()}, mean ~> {loss_total / batch_count}")
+                    # print('mean loss {0:.4f}'.format(loss_total / batch_count))
 
             print("~~~~~~~~~~~~~~~~~~")
             print(f"Epoch: {epoch} out of {self.epochs}")
@@ -261,9 +220,9 @@ class Runner:
             print(f"Total loss: {loss_total:.4f}")
             print("~~~~~~~~~~~~~~~~~~")
 
-        if self.save_weights:
-            path = "/home/devmood/PycharmProjects/pic2story/cache/model"
-            torch.save(model.state_dict(), path)
-            # model.save_weights()
+            if self.save_weights:
+                path = "/home/devmood/PycharmProjects/pic2story/cache/model"
+                torch.save(model.state_dict(), path)
+                # model.save_weights()
 
         return model
