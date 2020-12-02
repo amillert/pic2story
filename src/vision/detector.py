@@ -4,6 +4,7 @@ Module implementing the Detector class
 import os
 
 import cv2
+from nltk.corpus import wordnet
 import numpy as np
 
 import src
@@ -14,6 +15,7 @@ class Detector:
     """
     Detector used for detecting objects in the pictures using YOLO
     """
+
     def __init__(self, args):
         """
         Constructor of the Detector
@@ -42,11 +44,16 @@ class Detector:
         """
         Method responsible for detecting labels in pictures
 
-        :return: list[str]
+        :return: tuple([list[str], list[str]])
         """
-        return list({label for img_path in
-                     [xi for x in self.generate_absolute_paths(self.paths_img) for xi in x]
-                     for label in set(self.predict_label(img_path))})
+        labels = list({label for img_path in
+                       [xi for x in self.generate_absolute_paths(self.paths_img) for xi in x]
+                       for label in set(self.predict_label(img_path))})
+
+        synonyms = [lemma.name() for l in labels for s in wordnet.synsets(l) for lemma in s.lemmas()]
+        synonyms = [s for s in synonyms if s not in labels and s.isalpha()]
+
+        return labels, synonyms
 
     def predict_label(self, img):
         """
