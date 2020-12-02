@@ -168,5 +168,13 @@ argument_parser.add_argument(
          "(32GB not sufficient for whole dataset)",
     required=False
 )
+argument_parser.add_argument(
+    "--synonyms",
+    action="store",
+    type=str,
+    help="Provide synonyms to the labels of the provided pictures for an evalutaion",
+    required=False,
+    nargs="+"
+)
 
 args = argument_parser.parse_args()

@@ -24,6 +24,7 @@ class Detector:
         """
         def_pics_paths = os.listdir(os.path.join(pgen.parent_path(src.SRC_DIR), "data/pics"))
         self.confidence = args.confidence
+        self.synonyms = args.synonyms
         self.paths_img = args.paths_img if args.paths_img else def_pics_paths
         self.classes = [x.strip() for x in open(args.labels).readlines()]
         self.net = cv2.dnn.readNetFromDarknet(args.net_config, args.transfer_weights)
@@ -49,6 +50,9 @@ class Detector:
         labels = list({label for img_path in
                        [xi for x in self.generate_absolute_paths(self.paths_img) for xi in x]
                        for label in set(self.predict_label(img_path))})
+
+        if self.synonyms:
+            return labels, self.synonyms
 
         synonyms = [lemma.name() for l in labels for s in wordnet.synsets(l) for lemma in s.lemmas()]
         synonyms = [s for s in synonyms if s not in labels and s.isalpha()]

@@ -18,5 +18,7 @@ if __name__ == '__main__':
     runner = Runner(args)
     MODEL = runner.learn()
     generated = runner.generate(50, ' '.join(detected))
-
     score(generated, synonyms)
+
+    # text = "Someone went out with a dog to the park. It was a nice day and sun was shining."
+    # score(text, synonyms)
